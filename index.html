@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070b13">
+<meta name="description" content="Push It — Tag Pay You're It. A clear, controlled payment experience.">
+<title>Push It — Tag Pay You're It</title>
+<style>
+:root{color-scheme:dark;--bg:#070b13;--panel:#0e1724;--panel2:#111f2d;--line:#25394b;--blue:#3998ff;--teal:#35e0ce;--gold:#d9b56d;--text:#eff6ff;--muted:#8ca0b5;--red:#ffb7a9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;background:#0b121e;border-bottom:1px solid var(--line);padding:16px max(18px,calc((100% - 960px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2}
+.brand{font-size:23px;font-weight:900}.brand span{color:var(--teal)}.tag{font-size:10px;letter-spacing:1.8px;color:var(--muted)}
+.badge{font-size:10px;font-weight:800;color:var(--gold);border:1px solid #725c32;background:#342b1c;padding:7px 10px;border-radius:9px;white-space:nowrap}
+main{max-width:960px;margin:auto;padding:22px 18px 100px}.hero,.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:15px}.hero{background:linear-gradient(145deg,#0b1827,#0e1724)}
+.eyebrow{font-size:11px;letter-spacing:2px;font-weight:800;color:var(--teal)}h1{font-size:clamp(30px,6vw,48px);line-height:1.08;margin:10px 0}h2{font-size:19px;margin:0 0 12px}p{color:var(--muted);line-height:1.6;margin:7px 0}
+.notice{border:1px solid #725c32;background:#342b1c;color:#e7dcc7;border-radius:11px;padding:12px;margin-top:18px}.notice strong{display:block;color:var(--gold);font-size:11px;letter-spacing:1px;margin-bottom:5px}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:15px 0 20px}.btn{border:1px solid var(--blue);background:var(--blue);color:white;border-radius:12px;padding:13px 10px;font-weight:750;cursor:pointer}.btn.secondary{background:var(--panel2);border-color:var(--line)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,nav button:focus-visible{outline:2px solid var(--teal);outline-offset:3px}.line{border-top:1px solid var(--line);margin-top:13px;padding-top:12px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+nav{position:fixed;bottom:0;left:0;right:0;background:#0e1724;border-top:1px solid var(--line);display:flex;justify-content:center;gap:0;padding:8px 8px max(8px,env(safe-area-inset-bottom));z-index:3}
+nav button{flex:1;max-width:180px;background:transparent;border:0;color:var(--muted);padding:7px 2px;cursor:pointer;font-weight:650}nav button.active{color:var(--teal)}nav small{display:block;font-size:10px;margin-top:3px}section[hidden]{display:none}
+.field{display:block;width:100%;margin:7px 0 13px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--text);font:inherit}.warning{color:var(--gold);font-size:12px}.danger{color:var(--red)}
+@media(max-width:600px){.hero,.card{padding:16px}header{padding:14px 16px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">Push <span>It</span></div><div class="tag">TAG PAY YOU'RE IT</div></div><div class="badge">PREVIEW MODE</div></header>
+<main>
+<section id="home"><div class="hero"><div class="eyebrow">PUSH IT</div><h1>Money moves<br>with clarity.</h1><p>Tag Pay You're It</p><div class="notice"><strong>SAFE PREVIEW</strong>Live transfers are disabled in this interface. No real payment can be sent from this build.</div></div>
+<h2>Quick actions</h2><div class="actions"><button class="btn" data-tab="pay">Pay</button><button class="btn secondary" data-tab="pay">Request</button><button class="btn secondary" data-tab="wallet">Wallet</button></div>
+<div class="card"><h2>Account overview</h2><p>Balances and activity will appear after secure sign-in and a verified ledger are connected.</p><p class="warning">No demo balance is shown.</p></div>
+<div class="card"><h2>System readiness</h2><p>Backend health check.</p><button class="btn secondary" id="check">Check status</button><div class="line" id="status" role="status">Status not checked yet.</div></div></section>
+<section id="pay" hidden><div class="card"><h2>Pay or request</h2><p>Enter details to preview the flow. This screen does not initiate or save a transfer.</p>
+<label>Recipient / username<input class="field" id="recipient" placeholder="Enter recipient" autocomplete="off" maxlength="100"></label>
+<label>Amount (USD)<input class="field" id="amount" type="number" min="0.01" max="1000000" step="0.01" placeholder="0.00"></label>
+<label>Note (optional)<input class="field" id="note" placeholder="What's it for?" maxlength="250"></label>
+<button class="btn" id="preview">Preview payment flow</button><p class="warning">Transfers are disabled. Previewing does not save or send payment data.</p><div class="line" id="preview-result" aria-live="polite"></div></div></section>
+<section id="activity" hidden><div class="card"><h2>Activity</h2><p>Verified transaction history appears when authenticated backend and ledger integration are ready.</p><p class="warning">No transactions are displayed until verified data is available.</p></div></section>
+<section id="wallet" hidden><div class="card"><h2>Wallet</h2><p>Balances, bank accounts, debit cards, and payout destinations require authenticated account data from the backend.</p><p class="warning">No accounts or balances are fabricated.</p></div><div class="card"><h2>Funding methods</h2><p>Bank linking and debit-card funding must use a supported, approved provider flow.</p><button class="btn secondary" disabled>Provider setup not verified</button></div></section>
+<section id="account" hidden><div class="card"><h2>Account &amp; security</h2><p>Authentication, identity verification, recovery, and account deletion must be implemented before this app can manage financial accounts.</p></div><div class="card"><h2>Safety commitments</h2><p>• No live transfer actions in this build<br>• No payment secrets stored in the browser<br>• No fake balances or transactions<br>• No real financial actions on this page</p></div></section>
+</main>
+<nav aria-label="Main navigation"><button class="active" data-tab="home">⌂<small>Home</small></button><button data-tab="pay">$<small>Pay</small></button><button data-tab="activity">↻<small>Activity</small></button><button data-tab="wallet">▣<small>Wallet</small></button><button data-tab="account">☰<small>Account</small></button></nav>
+<script>
+const tabs=[...document.querySelectorAll('[data-tab]')];
+function show(name){document.querySelectorAll('main section').forEach(s=>s.hidden=s.id!==name);document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));window.scrollTo({top:0,behavior:'smooth'})}
+tabs.forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+document.getElementById('preview').addEventListener('click',()=>{const who=document.getElementById('recipient').value.trim(),n=Number(document.getElementById('amount').value),note=document.getElementById('note').value.trim(),out=document.getElementById('preview-result');if(!who||!Number.isFinite(n)||n<=0||n>1000000){out.textContent='Enter a recipient and a valid amount between $0.01 and $1,000,000.';return}out.textContent='PREVIEW ONLY — Recipient: '+who+' · Amount: $'+n.toFixed(2)+(note?' · Note: '+note:'')+'. No transaction was created and no money moved.'});
+document.getElementById('check').addEventListener('click',async()=>{const out=document.getElementById('status'),button=document.getElementById('check');out.textContent='Checking…';button.disabled=true;try{const r=await fetch('/api/status',{headers:{Accept:'application/json'},cache:'no-store'});if(!r.ok)throw Error('Status endpoint returned HTTP '+r.status);const s=await r.json();out.textContent='Mode: '+(s.mode||'unknown')+' · Readiness: '+(s.readiness||'unknown')+' · Live payments: '+(s.livePaymentsEnabled?'reported enabled; client remains locked':'disabled / unverified')}catch(e){out.textContent='Backend status endpoint is not available yet. This is a UI preview only; payment processing has not been verified.'}finally{button.disabled=false}});
+</script></body></html>
