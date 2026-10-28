@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Push It", "slug": "push-it-mobile", "version": "1.0.0",
+    "orientation": "portrait", "userInterfaceStyle": "dark",
+    "splash": {"backgroundColor":"#070B13"},
+    "android": {"package":"world.94ghostech.pushit"},
+    "ios": {"bundleIdentifier":"world.94ghostech.pushit", "supportsTablet":false},
+    "extra": {"apiBaseUrl":"https://pushit.94ghostech.world"}
+  }
+}
