@@ -41,5 +41,8 @@ create policy pushit_subscriptions_select_own
   using (auth.uid() = user_id);
 
 grant select on public.pushit_subscriptions to authenticated;
+grant select, insert, update, delete on public.pushit_billing_customers to service_role;
+grant select, insert, update, delete on public.pushit_subscriptions to service_role;
+grant select, insert, update, delete on public.pushit_webhook_events to service_role;
 revoke all on public.pushit_billing_customers from anon, authenticated;
 revoke all on public.pushit_webhook_events from anon, authenticated;
