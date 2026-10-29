@@ -34,7 +34,7 @@
 
 - [x] Write tests first and observe the missing-module failure.
 - [x] Implement strict monthly/annual plan allowlist and idempotency-key validation.
-- [x] Run the unit tests; both tests pass in the local Node test runner.
+- [x] Run the unit tests; all three tests pass in the local Node test runner.
 
 ### Task 2: Authenticated subscription API
 
