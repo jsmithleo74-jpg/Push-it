@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parsePlan, isValidIdempotencyKey } = require('../lib/billing');
+const { parsePlan, isValidIdempotencyKey } = require('../lib/billing-validation');
 
 test('accepts only the configured subscription plan names', () => {
   assert.equal(parsePlan('monthly'), 'monthly');
