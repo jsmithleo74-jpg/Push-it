@@ -23,8 +23,8 @@ All user routes require a valid Supabase access token in `Authorization: Bearer 
 
 1. Apply `supabase/migrations/202610290001_pushit_billing.sql` to the intended Supabase project and verify the three tables and RLS policies.
 2. Configure a Stripe **test-mode** secret key, test-mode monthly and annual recurring Price IDs, and the webhook signing secret for `/api/billing/webhook`.
-3. Configure `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and the server-only `SUPABASE_SERVICE_ROLE_KEY` in Vercel. The service-role key must never be client-exposed.
-4. Set `NEXT_PUBLIC_APP_URL` to the test deployment URL.
+3. Configure `SUPABASE_URL` and the server-only `SUPABASE_SERVICE_ROLE_KEY` in Vercel. The service-role key must never be client-exposed.
+4. Set `AUTH0_DOMAIN` and the exact `AUTH0_AUDIENCE` configured for your Auth0 API, then set `NEXT_PUBLIC_APP_URL` to the test deployment URL.
 5. Set `STRIPE_EXPECTED_MODE=test`, redeploy, then test authenticated checkout, success/cancel return, portal creation, duplicate webhook delivery, subscription update/cancellation, and database persistence.
 
 See `.env.example` for variable names only. It contains placeholders, not usable credentials.
