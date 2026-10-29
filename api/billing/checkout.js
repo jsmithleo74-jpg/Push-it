@@ -8,15 +8,13 @@ module.exports = async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return json(res, 405, { error: 'method_not_allowed' });
   }
-
   const config = getBillingConfig();
-  if (!config.ready) return json(res, 503, { error: 'billing_not_configured', message: 'Subscription checkout is locked until test-mode credentials, prices, and database access are configured.' });
+  if (!config.ready) return json(res, 503, { error: 'billing_not_configured', message: 'Subscription checkout is locked until test-mode credentials, Auth0 API audience, prices, and database access are configured.' });
 
   const idempotencyKey = req.headers['idempotency-key'];
   if (!isValidIdempotencyKey(idempotencyKey)) {
     return json(res, 400, { error: 'invalid_idempotency_key', message: 'Send a unique 16–128 character Idempotency-Key using letters, numbers, underscores, or hyphens.' });
   }
-
   let body = req.body;
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { return json(res, 400, { error: 'invalid_json' }); }
@@ -27,14 +25,13 @@ module.exports = async function handler(req, res) {
   try {
     const auth = await getAuthenticatedUser(req);
     if (!auth.user) return json(res, 401, { error: auth.error });
-
     const stripe = stripeClient();
     const db = serviceClient();
     const user = auth.user;
     const { data: existing, error: lookupError } = await db
       .from('pushit_billing_customers')
       .select('stripe_customer_id')
-      .eq('user_id', user.id)
+      .eq('auth_subject', user.id)
       .maybeSingle();
     if (lookupError) throw lookupError;
 
@@ -42,14 +39,14 @@ module.exports = async function handler(req, res) {
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email || undefined,
-        metadata: { supabase_user_id: user.id, app: 'push-it' }
+        metadata: { auth0_sub: user.id, app: 'push-it' }
       }, { idempotencyKey: `pushit-customer-${user.id}` });
       customerId = customer.id;
       const { error: saveError } = await db.from('pushit_billing_customers').upsert({
-        user_id: user.id,
+        auth_subject: user.id,
         stripe_customer_id: customerId,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      }, { onConflict: 'auth_subject' });
       if (saveError) throw saveError;
     }
 
@@ -61,16 +58,14 @@ module.exports = async function handler(req, res) {
       success_url: `${appBaseUrl()}/?billing=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appBaseUrl()}/?billing=cancelled`,
       client_reference_id: user.id,
-      metadata: { supabase_user_id: user.id, plan, app: 'push-it' },
-      subscription_data: { metadata: { supabase_user_id: user.id, plan, app: 'push-it' } },
+      metadata: { auth0_sub: user.id, plan, app: 'push-it' },
+      subscription_data: { metadata: { auth0_sub: user.id, plan, app: 'push-it' } },
       allow_promotion_codes: true
     }, { idempotencyKey: `pushit-checkout-${user.id}-${idempotencyKey}` });
-
     return json(res, 200, { url: session.url, sessionId: session.id, mode: 'test' });
   } catch (error) {
     console.error('Push It checkout error', { code: error.code || 'unknown', type: error.type || 'unknown' });
     if (error.code === 'billing_not_configured') return json(res, 503, { error: error.code });
-    if (error.code === 'invalid_grant' || error.message === 'Invalid JWT') return json(res, 401, { error: 'invalid_session' });
     return json(res, 500, { error: 'checkout_unavailable', message: 'Checkout could not be created. No payment was taken.' });
   }
 };
