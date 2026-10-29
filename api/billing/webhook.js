@@ -11,7 +11,6 @@ function readRawBody(req) {
       size += chunk.length;
       if (size > 1024 * 1024) {
         reject(new Error('payload_too_large'));
-        req.destroy();
         return;
       }
       chunks.push(chunk);
@@ -21,20 +20,20 @@ function readRawBody(req) {
   });
 }
 
-async function syncSubscription(stripe, db, subscription) {
+async function syncSubscription(db, subscription) {
   const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id;
-  let userId = subscription.metadata && subscription.metadata.supabase_user_id;
-  if (!userId) {
+  let authSubject = subscription.metadata && subscription.metadata.auth0_sub;
+  if (!authSubject) {
     const { data: customerRow, error: customerError } = await db.from('pushit_billing_customers')
-      .select('user_id').eq('stripe_customer_id', customerId).maybeSingle();
+      .select('auth_subject').eq('stripe_customer_id', customerId).maybeSingle();
     if (customerError) throw customerError;
-    userId = customerRow && customerRow.user_id;
+    authSubject = customerRow && customerRow.auth_subject;
   }
-  if (!userId) throw new Error('subscription_user_not_mapped');
+  if (!authSubject) throw new Error('subscription_identity_not_mapped');
 
   const item = subscription.items && subscription.items.data && subscription.items.data[0];
   const row = {
-    user_id: userId,
+    auth_subject: authSubject,
     stripe_customer_id: customerId,
     stripe_subscription_id: subscription.id,
     status: subscription.status,
@@ -52,20 +51,17 @@ module.exports = async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return json(res, 405, { error: 'method_not_allowed' });
   }
-  const config = getBillingConfig();
-  if (!config.ready) return json(res, 503, { error: 'billing_not_configured' });
-
+  if (!getBillingConfig().ready) return json(res, 503, { error: 'billing_not_configured' });
   const signature = req.headers['stripe-signature'];
   if (!signature) return json(res, 400, { error: 'missing_signature' });
 
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   let event;
   try {
     const raw = await readRawBody(req);
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     event = stripe.webhooks.constructEvent(raw, signature, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (error) {
-    const status = error.message === 'payload_too_large' ? 413 : 400;
-    return json(res, status, { error: 'invalid_webhook' });
+    return json(res, error.message === 'payload_too_large' ? 413 : 400, { error: 'invalid_webhook' });
   }
 
   const db = serviceClient();
@@ -83,14 +79,12 @@ module.exports = async function handler(req, res) {
     const obj = event.data && event.data.object;
     if (event.type === 'checkout.session.completed' && obj && obj.subscription) {
       const subscriptionId = typeof obj.subscription === 'string' ? obj.subscription : obj.subscription.id;
-      const subscription = await stripeRetrieveSubscription(subscriptionId);
-      await syncSubscription(new Stripe(process.env.STRIPE_SECRET_KEY), db, subscription);
+      await syncSubscription(db, await stripe.subscriptions.retrieve(subscriptionId));
     } else if (event.type.startsWith('customer.subscription.') && obj && obj.id) {
-      await syncSubscription(new Stripe(process.env.STRIPE_SECRET_KEY), db, obj);
+      await syncSubscription(db, obj);
     } else if ((event.type === 'invoice.paid' || event.type === 'invoice.payment_failed') && obj && obj.subscription) {
       const subscriptionId = typeof obj.subscription === 'string' ? obj.subscription : obj.subscription.id;
-      const subscription = await stripeRetrieveSubscription(subscriptionId);
-      await syncSubscription(new Stripe(process.env.STRIPE_SECRET_KEY), db, subscription);
+      await syncSubscription(db, await stripe.subscriptions.retrieve(subscriptionId));
     }
 
     const { error: doneError } = await db.from('pushit_webhook_events')
@@ -104,9 +98,5 @@ module.exports = async function handler(req, res) {
       status: 'failed', updated_at: new Date().toISOString()
     }).eq('event_id', event.id);
     return json(res, 500, { error: 'webhook_processing_failed' });
-  }
-
-  async function stripeRetrieveSubscription(id) {
-    return new Stripe(process.env.STRIPE_SECRET_KEY).subscriptions.retrieve(id);
   }
 };
