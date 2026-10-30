@@ -1,4 +1,6 @@
-module.exports = function handler(req, res) {
+const { verifyMoovAuthentication } = require('../../lib/moov');
+
+module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -8,20 +10,26 @@ module.exports = function handler(req, res) {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  const secretConfigured = Boolean(process.env.MOOV_SECRET_KEY);
-  const publicConfigured = Boolean(process.env.MOOV_PUBLIC_KEY);
-  return res.status(secretConfigured && publicConfigured ? 200 : 503).json({
+  const auth = await verifyMoovAuthentication();
+  const ready = auth.authenticated === true;
+  return res.status(ready ? 200 : 503).json({
     service: 'Push It',
     provider: 'Moov',
-    credentialsConfigured: secretConfigured && publicConfigured,
+    credentialsConfigured: auth.configured,
     checks: {
-      secretKeyPresent: secretConfigured,
-      publicKeyPresent: publicConfigured,
-      providerAuthentication: 'not_verified',
+      secretKeyPresent: Boolean(process.env.MOOV_SECRET_KEY),
+      publicKeyPresent: Boolean(process.env.MOOV_PUBLIC_KEY),
+      providerAuthentication: ready ? 'verified' : 'not_verified',
+      providerPing: auth.reason,
+      transferScope: 'not_verified',
+      sourceAndDestinationPaymentMethods: 'not_verified',
+      accountCapabilities: 'not_verified',
       webhookVerification: 'not_verified',
       ledgerAndReconciliation: 'not_verified'
     },
     liveMoneyMovementEnabled: false,
-    message: 'This endpoint checks configuration presence only. It does not contact Moov or authorize financial actions.'
+    message: ready
+      ? 'Moov authentication and read-only ping succeeded. Transfer prerequisites remain unverified; money movement stays disabled.'
+      : 'Moov authentication could not be verified. Money movement stays disabled.'
   });
 };
