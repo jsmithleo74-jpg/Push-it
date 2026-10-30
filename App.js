@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, Pressable, ScrollView, TextInput, ActivityInd
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
 const C={bg:'#070B13',panel:'#0E1724',panel2:'#111F2D',line:'#25394B',blue:'#3998FF',teal:'#35E0CE',gold:'#D9B56D',text:'#EFF6FF',muted:'#8CA0B5',red:'#FFB7A9'};
-const API_BASE='https://pushit.94ghostech.world';
+const API_BASE='https://push-it-consolidated-jsmithleo74-7494.vercel.app';
 function Card({children,style}){return <View style={[{backgroundColor:C.panel,borderColor:C.line,borderWidth:1,borderRadius:18,padding:16},style]}>{children}</View>}
 function Heading({children}){return <Text style={{color:C.text,fontSize:19,fontWeight:'800',marginBottom:12}}>{children}</Text>}
 function Action({title,onPress,secondary=false,disabled=false}){return <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={({pressed})=>({backgroundColor:secondary?C.panel2:C.blue,borderColor:secondary?C.line:C.blue,borderWidth:1,borderRadius:13,paddingVertical:14,paddingHorizontal:12,alignItems:'center',opacity:disabled?0.45:pressed?0.78:1})}><Text style={{color:C.text,fontWeight:'700',fontSize:14}}>{title}</Text></Pressable>}
