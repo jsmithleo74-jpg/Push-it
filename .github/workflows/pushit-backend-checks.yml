@@ -18,6 +18,6 @@ jobs:
         with:
           node-version: 22
       - name: Syntax-check serverless routes
-        run: node --check lib/billing.js && node --check lib/billing-validation.js && node --check api/billing/checkout.js && node --check api/billing/portal.js && node --check api/billing/status.js && node --check api/billing/webhook.js
+        run: node --check lib/billing.js && node --check lib/billing-validation.js && node --check lib/moov.js && node --check api/moov/status.js && node --check api/billing/checkout.js && node --check api/billing/portal.js && node --check api/billing/status.js && node --check api/billing/webhook.js
       - name: Run unit tests
         run: npm test
